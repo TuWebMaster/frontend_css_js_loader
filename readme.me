@@ -1,0 +1,92 @@
+# Frontend CSS/JS Loader
+
+CSS & JS personalizados para el Website + movimiento de secciones QWeb sin flicker
+
+Este módulo permite inyectar y mantener CSS/JS en el frontend del sitio desde archivos versionados y, además, realizar reubicación de secciones QWeb directamente en el render del servidor (sin JavaScript y sin “salto” visual).
+
+## Características
+
+- Carga de `static/src/css/style.css` y `static/src/js/website.js` en `web.assets_frontend`.
+- Reorganización de secciones QWeb sin duplicados ni flicker (render en destino).
+- Compatible con Odoo 18 (Website / Website Sale).
+- Enfoque “limpio” y mantenible: cambios en archivos, ideal para control de versiones.
+
+## Cómo usar — CSS & JS
+
+1. Edite `static/src/css/style.css` con sus estilos.  
+2. Opcional: edite `static/src/js/website.js` para lógica de UI (no se usa para mover secciones).  
+3. Actualice el módulo para recompilar assets.
+
+**Tip:** para pruebas rápidas, Website → Settings → Custom Code. En producción, es preferible mantener CSS/JS en archivos. Si su instancia usa CSP estricta, evite JS inline.
+
+## Cómo usar — Mover secciones QWeb
+
+El módulo incluye un archivo `views/move_sections.xml` donde centralizar todas las reubicaciones de bloques de plantilla. Procedimiento aplicado:
+
+1. Insertar un ancla en el destino (p. ej., al final de la PDP).  
+2. Eliminar en el AST el render original (quitar primero el `t-call` y luego cualquier `t-set` relacionado para evitar `t-else` huérfanos).  
+3. Reinsertar abajo el mismo contenido (llamando al template correcto según configuración).
+
+Si la sección proviene de otro addon, agregue esa dependencia en el `__manifest__.py` para que nuestra vista herede después y pueda localizar sus nodos QWeb.
+
+## Estructura del módulo
+
+frontend_css_js_loader/
+├─ manifest.py
+├─ static/
+│ └─ src/
+│ ├─ css/style.css
+│ └─ js/website.js
+└─ views/
+└─ move_sections.xml ← aquí agrupamos los movimientos QWeb
+
+csharp
+Copiar código
+
+## Manifest (resumen)
+
+```json
+{
+  "name": "Frontend CSS/JS Loader",
+  "version": "18.0.1.0.0",
+  "license": "LGPL-3",
+  "depends": [
+    "website",
+    "website_sale"
+    // agregue aquí otros addons que inyecten secciones que quiera mover
+  ],
+  "data": [
+    "views/move_sections.xml"
+  ],
+  "assets": {
+    "web.assets_frontend": [
+      "frontend_css_js_loader/static/src/css/style.css",
+      "frontend_css_js_loader/static/src/js/website.js"
+    ]
+  }
+}
+Prueba rápida
+Actualizar el módulo (Apps → Upgrade o -u frontend_css_js_loader).
+
+Vaciar caché y probar en incógnito.
+
+Verifique que el bloque se renderiza solo una vez y en el lugar deseado.
+
+Resolución de problemas
+“No se puede localizar el elemento en la vista principal”: revise el inherit_id y el XPath del contenedor; confirme que la dependencia del addon origen esté en el manifest.
+
+Error QWeb por t-else: quite primero el t-call, luego cualquier t-set con t-else, y por último el resto de t-set. Reinserte con un único t-set condicional (sin t-else).
+
+Conflictos de herencia: eleve priority en la vista que mueve la sección y verifique el orden de carga de módulos.
+
+Flicker: evite mover con JavaScript; haga la reubicación en QWeb (servidor) como se describe arriba.
+
+Historial
+18.0.1.0.0 — Versión inicial: carga de CSS/JS y soporte para movimientos QWeb sin flicker.
+
+Soporte
+Desarrollado por Tu Web Master — tuwebmaster.com.ar
+¿Necesitás adaptar más secciones o integrar con un tema/addon específico? Podemos ayudarte.
+
+¡Gracias por usar Frontend CSS/JS Loader!
+© Tu Web Master — Este addon se distribuye bajo licencia LGPL v3.

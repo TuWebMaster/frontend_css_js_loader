@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!-- Dejá este archivo para tus templates QWeb si los necesitás.
+         NO declares assets acá en Odoo 18+. -->
+</odoo>

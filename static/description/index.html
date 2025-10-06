@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Frontend CSS/JS Loader — Tu Web Master</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root { --fg:#0f172a; --muted:#64748b; --primary:#2563eb; --bg:#ffffff; --border:#e5e7eb; }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Noto Sans",sans-serif;color:var(--fg);background:var(--bg);line-height:1.6}
+    .wrap{max-width:900px;margin:0 auto;padding:32px 20px}
+    /* ---------- HERO (1 columna) ---------- */
+    .hero{display:flex;gap:18px;align-items:center;margin-bottom:24px;flex-wrap:wrap}
+    .title{font-size:30px;font-weight:800;margin:0}
+    .subtitle{margin:6px 0 0;color:var(--muted)}
+    .badges{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 0}
+    .badge{font-size:12px;color:#0b3b87;background:#e6f0ff;padding:6px 10px;border-radius:999px;border:1px solid #cfe0ff}
+    /* ---------- TYPO ---------- */
+    h2{margin:28px 0 12px;font-size:22px}
+    h3{margin:18px 0 10px;font-size:16px}
+    p{margin:12px 0}
+    ul{margin:10px 0 14px 20px}
+    code,kbd,pre{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace}
+    kbd{background:#f1f5f9;border:1px solid #e2e8f0;border-bottom-width:2px;border-radius:6px;padding:2px 6px;font-size:12px}
+    pre{background:#0b1020;color:#e6edf3;border-radius:10px;padding:14px 16px;overflow:auto;white-space:pre;tab-size:2}
+    pre code{color:inherit}
+    .note{background:#f8fafc;border:1px solid var(--border);padding:12px 14px;border-radius:10px}
+    a{color:var(--primary);text-decoration:none}
+    /* ---------- LAYOUT 1 COLUMNA ---------- */
+    .onecol{display:block} /* sin grid; 1 columna real */
+    .foot{margin-top:32px;font-size:13px;color:var(--muted)}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header class="hero">
+      <img src="icon.png" alt="Frontend CSS/JS Loader icon">
+      <div>
+        <h1 class="title">Frontend CSS/JS Loader</h1>
+        <p class="subtitle">CSS &amp; JS personalizados para el Website + movimiento de secciones QWeb sin flicker</p>
+        <div class="badges">
+          <span class="badge">Odoo 18</span>
+          <span class="badge">Website</span>
+          <span class="badge">LGPLv3</span>
+          <span class="badge">Versión 18.0.1.0.0</span>
+        </div>
+      </div>
+    </header>
+
+    <section>
+      <p>
+        Este módulo permite <strong>inyectar y mantener CSS/JS</strong> en el frontend del sitio desde archivos versionados
+        y, además, realizar <strong>reubicación de secciones QWeb</strong> directamente en el render del servidor
+        (sin JavaScript y sin “salto” visual).
+      </p>
+    </section>
+
+    <div class="onecol">
+      <section>
+        <h2>Características</h2>
+        <ul>
+          <li>Carga de <code>static/src/css/style.css</code> y <code>static/src/js/website.js</code> en <code>web.assets_frontend</code>.</li>
+          <li>Reorganización de secciones QWeb sin duplicados ni flicker (render en destino).</li>
+          <li>Compatible con Odoo 18 (Website / Website Sale).</li>
+          <li>Enfoque “limpio” y mantenible: cambios en archivos, ideal para control de versiones.</li>
+        </ul>
+
+        <h2>Cómo usar — CSS &amp; JS</h2>
+        <ol>
+          <li>Edite <code>static/src/css/style.css</code> con sus estilos.</li>
+          <li>Opcional: edite <code>static/src/js/website.js</code> para lógica de UI (no se usa para mover secciones).</li>
+          <li>Actualice el módulo para recompilar assets.</li>
+        </ol>
+
+        <div class="note">
+          <strong>Tip:</strong> para pruebas rápidas, Website → Settings → Custom Code.
+          En producción, es preferible mantener CSS/JS en archivos. Si su instancia usa CSP estricta, evite JS inline.
+        </div>
+      </section>
+
+      <section>
+        <h2>Cómo usar — Mover secciones QWeb</h2>
+        <p>
+          El módulo incluye un archivo <code>views/move_sections.xml</code> donde centralizar <strong>todas</strong>
+          las reubicaciones de bloques de plantilla. Procedimiento aplicado:
+        </p>
+        <ul>
+          <li><strong>Insertar un ancla</strong> en el destino (p. ej., al final de la PDP).</li>
+          <li><strong>Eliminar</strong> en el AST el render original (quitar primero el <code>t-call</code> y luego cualquier <code>t-set</code> relacionado para evitar <code>t-else</code> huérfanos).</li>
+          <li><strong>Reinsertar</strong> abajo el mismo contenido (llamando al template correcto según configuración).</li>
+        </ul>
+        <p>
+          Si la sección proviene de otro addon, agregue esa dependencia en el <code>__manifest__.py</code> para que nuestra vista herede
+          <em>después</em> y pueda localizar sus nodos QWeb.
+        </p>
+      </section>
+
+      <section>
+        <h2>Estructura del módulo</h2>
+        <pre><code>frontend_css_js_loader/
+├─ __manifest__.py
+├─ static/
+│  └─ src/
+│     ├─ css/style.css
+│     └─ js/website.js
+└─ views/
+   └─ move_sections.xml   ← aquí agrupamos los movimientos QWeb
+</code></pre>
+
+        <h3>Manifest (resumen)</h3>
+        <pre><code>{
+  "name": "Frontend CSS/JS Loader",
+  "version": "18.0.1.0.0",
+  "license": "LGPL-3",
+  "depends": [
+    "website",
+    "website_sale"
+    // agregue aquí otros addons que inyecten secciones que quiera mover
+  ],
+  "data": [
+    "views/move_sections.xml"
+  ],
+  "assets": {
+    "web.assets_frontend": [
+      "frontend_css_js_loader/static/src/css/style.css",
+      "frontend_css_js_loader/static/src/js/website.js"
+    ]
+  }
+}
+</code></pre>
+
+        <h3>Prueba rápida</h3>
+        <ul>
+          <li>Actualizar el módulo (<kbd>Apps → Upgrade</kbd> o <kbd>-u frontend_css_js_loader</kbd>).</li>
+          <li>Vaciar caché y probar en incógnito.</li>
+          <li>Verifique que el bloque se renderiza <strong>solo una vez</strong> y en el lugar deseado.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Resolución de problemas</h2>
+        <ul>
+          <li><strong>“No se puede localizar el elemento en la vista principal”</strong>: revise el <em>inherit_id</em> y el XPath del contenedor; confirme que la dependencia del addon origen esté en el manifest.</li>
+          <li><strong>Error QWeb por <code>t-else</code></strong>: quite primero el <code>t-call</code>, luego cualquier <code>t-set</code> con <code>t-else</code>, y por último el resto de <code>t-set</code>. Reinserte con un único <code>t-set</code> condicional (sin <code>t-else</code>).</li>
+          <li><strong>Conflictos de herencia</strong>: eleve <code>priority</code> en la vista que mueve la sección y verifique el orden de carga de módulos.</li>
+          <li><strong>Flicker</strong>: evite mover con JavaScript; haga la reubicación en QWeb (servidor) como se describe arriba.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Historial</h2>
+        <ul>
+          <li><strong>18.0.1.0.0</strong> — Versión inicial: carga de CSS/JS y soporte para movimientos QWeb sin flicker.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Soporte</h2>
+        <p>
+          Desarrollado por <strong>Tu Web Master</strong> — <a href="https://www.tuwebmaster.com.ar" target="_blank" rel="noopener">tuwebmaster.com.ar</a><br>
+          ¿Necesitás adaptar más secciones o integrar con un tema/addon específico? Podemos ayudarte.
+        </p>
+        <p class="kudos">¡Gracias por usar Frontend CSS/JS Loader! </p>
+      </section>
+    </div>
+
+    <footer class="foot">
+      © Tu Web Master — Este addon se distribuye bajo licencia LGPL v3.
+    </footer>
+  </main>
+</body>
+</html>
