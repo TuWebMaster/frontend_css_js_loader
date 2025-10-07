@@ -1,51 +1,61 @@
-# Frontend CSS/JS Loader
+Frontend CSS/JS Loader for Odoo 18 (CE & EE)
 
-CSS & JS personalizados para el Website + movimiento de secciones QWeb sin flicker
+Addon técnico para Odoo 18 Community y Enterprise.
+Proporciona una estructura limpia y versionable para inyectar y mantener código CSS, JavaScript y vistas QWeb personalizadas en el frontend del Website.
+Diseñado para desarrolladores que buscan un método profesional, reproducible y compatible con el sistema de caché y compilación de assets de Odoo.
 
-Este módulo permite inyectar y mantener CSS/JS en el frontend del sitio desde archivos versionados y, además, realizar reubicación de secciones QWeb directamente en el render del servidor (sin JavaScript y sin “salto” visual).
+✅ Probado en Odoo 18 Community Edition (CE) y Odoo 18 Enterprise Edition (EE)
+✅ Compatible con website y website_sale
+✅ Ideal para entornos con control de versiones y despliegues automatizados
 
-## Características
+Beneficios del enfoque
 
-- Carga de `static/src/css/style.css` y `static/src/js/website.js` en `web.assets_frontend`.
-- Reorganización de secciones QWeb sin duplicados ni flicker (render en destino).
-- Compatible con Odoo 18 (Website / Website Sale).
-- Enfoque “limpio” y mantenible: cambios en archivos, ideal para control de versiones.
+Modificar el frontend de Odoo mediante un addon estructurado (en lugar del editor “Custom Code”) ofrece ventajas técnicas importantes:
 
-## Cómo usar — CSS & JS
+Persistencia total: los cambios permanecen intactos tras actualizaciones, reinicios o restauraciones de la base de datos.
 
-1. Edite `static/src/css/style.css` con sus estilos.  
-2. Opcional: edite `static/src/js/website.js` para lógica de UI (no se usa para mover secciones).  
-3. Actualice el módulo para recompilar assets.
+Control de versiones: el código CSS/JS se mantiene junto al resto del proyecto en Git.
 
-**Tip:** para pruebas rápidas, Website → Settings → Custom Code. En producción, es preferible mantener CSS/JS en archivos. Si su instancia usa CSP estricta, evite JS inline.
+Integración con el sistema de caché: los archivos se procesan por el pipeline estándar de Odoo (web.assets_frontend), lo que garantiza compresión, minificación y cache busting automáticos.
 
-## Cómo usar — Mover secciones QWeb
+Cumplimiento CSP: al evitar código inline, el sitio se mantiene compatible con políticas de seguridad estrictas.
 
-El módulo incluye un archivo `views/move_sections.xml` donde centralizar todas las reubicaciones de bloques de plantilla. Procedimiento aplicado:
+Despliegues coherentes: el mismo código se replica fácilmente entre entornos (desarrollo, staging y producción).
 
-1. Insertar un ancla en el destino (p. ej., al final de la PDP).  
-2. Eliminar en el AST el render original (quitar primero el `t-call` y luego cualquier `t-set` relacionado para evitar `t-else` huérfanos).  
-3. Reinsertar abajo el mismo contenido (llamando al template correcto según configuración).
+Mantenimiento limpio: todo el código de frontend vive en un solo módulo, sin alterar addons oficiales ni vistas base.
 
-Si la sección proviene de otro addon, agregue esa dependencia en el `__manifest__.py` para que nuestra vista herede después y pueda localizar sus nodos QWeb.
-
-## Estructura del módulo
-
+Estructura del módulo
 frontend_css_js_loader/
-├─ manifest.py
+├─ __manifest__.py
 ├─ static/
-│ └─ src/
-│ ├─ css/style.css
-│ └─ js/website.js
+│  └─ src/
+│     ├─ css/style.css
+│     └─ js/website.js
 └─ views/
-└─ move_sections.xml ← aquí agrupamos los movimientos QWeb
+   └─ custom_templates.xml (opcional para overrides QWeb)
 
-csharp
-Copiar código
+Uso básico
+CSS y JS personalizados
 
-## Manifest (resumen)
+Edite static/src/css/style.css para definir sus estilos globales.
 
-```json
+Opcionalmente, modifique static/src/js/website.js para agregar lógica de frontend.
+
+Actualice el módulo desde Apps → Upgrade o por terminal:
+
+odoo -u frontend_css_js_loader
+
+
+Limpie caché y verifique los cambios en incógnito.
+
+Tip: en desarrollo puede usar el modo sin caché (?debug=assets) para forzar recompilación inmediata.
+
+Uso opcional — QWeb personalizado
+
+Si desea modificar vistas del Website o Shop, puede crear un archivo adicional en views/ (por ejemplo custom_templates.xml) con herencias xpath.
+De esta forma, mantiene la personalización del layout dentro del mismo addon, sin tocar archivos nativos ni usar el editor visual.
+
+Manifest (resumen)
 {
   "name": "Frontend CSS/JS Loader",
   "version": "18.0.1.0.0",
@@ -53,10 +63,9 @@ Copiar código
   "depends": [
     "website",
     "website_sale"
-    // agregue aquí otros addons que inyecten secciones que quiera mover
   ],
   "data": [
-    "views/move_sections.xml"
+    "views/custom_templates.xml"
   ],
   "assets": {
     "web.assets_frontend": [
@@ -65,28 +74,37 @@ Copiar código
     ]
   }
 }
+
 Prueba rápida
-Actualizar el módulo (Apps → Upgrade o -u frontend_css_js_loader).
 
-Vaciar caché y probar en incógnito.
+Instalar el módulo desde Apps.
 
-Verifique que el bloque se renderiza solo una vez y en el lugar deseado.
+Editar los archivos style.css o website.js.
 
-Resolución de problemas
-“No se puede localizar el elemento en la vista principal”: revise el inherit_id y el XPath del contenedor; confirme que la dependencia del addon origen esté en el manifest.
+Actualizar el módulo y recargar el sitio.
 
-Error QWeb por t-else: quite primero el t-call, luego cualquier t-set con t-else, y por último el resto de t-set. Reinserte con un único t-set condicional (sin t-else).
+Confirmar que los cambios se reflejan sin código inline ni pérdida tras reinicios.
 
-Conflictos de herencia: eleve priority en la vista que mueve la sección y verifique el orden de carga de módulos.
+Solución de problemas
 
-Flicker: evite mover con JavaScript; haga la reubicación en QWeb (servidor) como se describe arriba.
+Cambios no visibles: limpiar caché del navegador y reiniciar Odoo con --dev=reload o -u frontend_css_js_loader.
+
+Error QWeb: revisar los xpath y dependencias declaradas en el manifest.
+
+Assets no actualizados: verificar permisos de escritura en /static y ejecutar --update=frontend_css_js_loader.
+
+Modo producción: confirmar que el parámetro --no-xmlrpc no impide la actualización de assets si se usa CI/CD.
 
 Historial
-18.0.1.0.0 — Versión inicial: carga de CSS/JS y soporte para movimientos QWeb sin flicker.
+
+18.0.1.0.0 — Versión inicial.
+Estructura para carga de CSS/JS versionados y soporte para vistas QWeb personalizadas.
 
 Soporte
-Desarrollado por Tu Web Master — tuwebmaster.com.ar
-¿Necesitás adaptar más secciones o integrar con un tema/addon específico? Podemos ayudarte.
 
-¡Gracias por usar Frontend CSS/JS Loader!
-© Tu Web Master — Este addon se distribuye bajo licencia LGPL v3.
+Desarrollado por Tu Web Master — tuwebmaster.com.ar
+
+¿Necesitás integrar personalizaciones o extender la estructura a tu tema o addon?
+Podemos ayudarte.
+
+© Tu Web Master — Distribuido bajo licencia LGPL v3.
